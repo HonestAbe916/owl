@@ -11,3 +11,5 @@
     npm install
     npm start
     ```
+
+3. navigate tp http://localhost:3000/
