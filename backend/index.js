@@ -17,6 +17,25 @@ const filePath = "./stock-data.csv";
 let stockData = [];
 let stockDataByCompany = {};
 
+function isValidDate(dateObject){
+    return new Date(dateObject).toString() !== 'Invalid Date';
+}
+
+// to do use binary search
+function getStockPriceOnDate(company, date) {
+    const stockPrices = stockDataByCompany[company];
+    const exactMatch = stockPrices.find((stock) => stock.date == date);
+    if (exactMatch) return exactMatch;
+
+    let bestMatch = null;
+    stockPrices.forEach((stock) => {
+        if (stock.date > date) return;
+        if (bestMatch === null || stock.date > bestMatch.date) bestMatch = stock;
+    });
+
+    return bestMatch;
+}
+
 async function parseCSV() {
     return new Promise((resolve, reject) => {
         fs.createReadStream(filePath)
@@ -24,7 +43,7 @@ async function parseCSV() {
             .on('data', (data) => {
                 // renaming some fields and make sure types are correct
                 const [id, name, date, volume, price, sector_level1, sector_level2] = Object.values(data);
-                stockData.push({ id: parseInt(id), name, date, volume, price: parseFloat(price), sector_level1, sector_level2 });
+                stockData.push({ id: parseInt(id), name, date: new Date(date), volume, price: parseFloat(price), sector_level1, sector_level2 });
             })
             .on('end', () => {
                 // store in the format stockName => [stockData]
@@ -68,23 +87,28 @@ app.get('/stocks/:name', (req, res) => {
 })
 
 app.get('/stocks/:name/:fromDate/:toDate', (req, res) => {
-    const stockPrices = stockDataByCompany[req.params.name];
+    const companyName = req.params.name;
+    const stockPrices = stockDataByCompany[companyName];
     if (!stockPrices) {
         return res.status(404).send('Stock not found');
     }
 
-    const fromDate = moment(req.params.fromDate).format("YYYY-MM-DD");
-    const toDate = moment(req.params.toDate).format("YYYY-MM-DD");
-    const stockFrom = stockPrices.find((stock) => stock.date == fromDate);
-    const stockTo = stockPrices.find((stock) => stock.date == toDate);
+    const from = new Date(req.params.fromDate);
+    const to = new Date(req.params.toDate);
 
+    if (!isValidDate(from) || !isValidDate(to)) {
+        return res.status(404).send('Invalid date provided');
+    }
+
+    const stockFrom = getStockPriceOnDate(companyName, from);
+    const stockTo = getStockPriceOnDate(companyName, to);
     if (!stockFrom || !stockTo) {
         return res.status(404).send('No stock data found for dates provided');
     }
 
-    const profit = parseFloat(stockFrom.price - stockTo.price).toFixed(2);
+    const profit = parseFloat(stockTo.price - stockFrom.price).toFixed(2);
 
-    return res.json({profit});
+    return res.json({ profit, stockFrom, stockTo });
 })
 
 app.listen(port, () => {

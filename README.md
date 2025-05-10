@@ -13,3 +13,5 @@
     ```
 
 3. navigate tp http://localhost:3000/
+
+4. to test profit endpoint localhost:3001/stocks/Apple/2000-12-07/2018-12-16
