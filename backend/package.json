@@ -1,0 +1,18 @@
+{
+  "name": "owl-backend",
+  "version": "1.0.0",
+  "description": "assesment",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node index.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "csv-parser": "^3.2.0",
+    "express": "^5.1.0",
+    "moment": "^2.30.1"
+  }
+}
