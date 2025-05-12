@@ -21,17 +21,26 @@ function isValidDate(dateObject){
     return new Date(dateObject).toString() !== 'Invalid Date';
 }
 
-// to do use binary search
+// use binary search to get stock price
 function getStockPriceOnDate(company, date) {
     const stockPrices = stockDataByCompany[company];
-    const exactMatch = stockPrices.find((stock) => stock.date == date);
-    if (exactMatch) return exactMatch;
 
+    let left = 0;
+    let right = stockPrices.length - 1;
     let bestMatch = null;
-    stockPrices.forEach((stock) => {
-        if (stock.date > date) return;
-        if (bestMatch === null || stock.date > bestMatch.date) bestMatch = stock;
-    });
+
+    while (left <= right) {
+        const mid = Math.floor((left + right) / 2);
+        const midDate = stockPrices[mid].date;
+        if (midDate.getTime() == date.getTime()) {
+            return stockPrices[mid]; // Exact match
+        } else if (midDate < date) {
+            bestMatch = stockPrices[mid]; // Potential best match (latest before date)
+            left = mid + 1;
+        } else {
+            right = mid - 1;
+        }
+    }
 
     return bestMatch;
 }
